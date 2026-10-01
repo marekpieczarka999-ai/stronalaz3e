@@ -1,0 +1,2253 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LazeMC.pl — Beta testy już niedługo</title>
+
+    <meta name="description" content="LazeMC.pl — nowoczesny serwer Minecraft.">
+    <meta name="theme-color" content="#050806">
+
+    <link rel="icon" href="/ikon.png?v=2" type="image/png">
+
+    <style>
+        :root {
+            --bg: #050705;
+            --bg-2: #080b08;
+            --text: #f3f7f3;
+            --muted: #8d9a90;
+            --muted-2: #657169;
+            --green: #48df62;
+            --green-line: rgba(72, 223, 98, .22);
+            --line: rgba(255,255,255,.075);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--text);
+            background:
+                radial-gradient(
+                    800px 500px at 50% 0%,
+                    rgba(72,223,98,.085),
+                    transparent 68%
+                ),
+                radial-gradient(
+                    600px 500px at 0% 70%,
+                    rgba(72,223,98,.035),
+                    transparent 70%
+                ),
+                linear-gradient(
+                    180deg,
+                    var(--bg),
+                    var(--bg-2)
+                );
+
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+
+            opacity: .28;
+
+            background-image:
+                linear-gradient(
+                    rgba(255,255,255,.018) 1px,
+                    transparent 1px
+                ),
+                linear-gradient(
+                    90deg,
+                    rgba(255,255,255,.018) 1px,
+                    transparent 1px
+                );
+
+            background-size: 64px 64px;
+
+            mask-image:
+                linear-gradient(
+                    to bottom,
+                    black,
+                    transparent 78%
+                );
+        }
+
+        a {
+            color: inherit;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        /* =========================
+           BACKGROUND
+        ========================= */
+
+        .ambient {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 22px rgba(72,223,98,.65);
+
+            opacity: .45;
+
+            animation:
+                drift 7s ease-in-out infinite;
+        }
+
+        .orb:nth-child(1) {
+            left: 13%;
+            top: 28%;
+        }
+
+        .orb:nth-child(2) {
+            left: 82%;
+            top: 21%;
+            animation-delay: -2s;
+        }
+
+        .orb:nth-child(3) {
+            left: 20%;
+            top: 74%;
+            animation-delay: -4s;
+        }
+
+        .orb:nth-child(4) {
+            left: 79%;
+            top: 68%;
+            animation-delay: -6s;
+        }
+
+        @keyframes drift {
+            0%,100% {
+                transform: translate3d(0,0,0);
+                opacity: .28;
+            }
+
+            50% {
+                transform: translate3d(0,-18px,0);
+                opacity: .72;
+            }
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        header {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            right: 0;
+
+            z-index: 50;
+
+            height: 72px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding:
+                0
+                clamp(18px, 5vw, 76px);
+
+            border-bottom:
+                1px solid rgba(255,255,255,.055);
+
+            background:
+                rgba(5,7,5,.62);
+
+            backdrop-filter:
+                blur(18px)
+                saturate(140%);
+        }
+
+        .logo {
+            width: 106px;
+            display: block;
+
+            transition:
+                transform .25s ease,
+                opacity .25s ease;
+        }
+
+        .logo:hover {
+            transform: translateY(-1px);
+            opacity: .9;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        nav a {
+            position: relative;
+
+            text-decoration: none;
+
+            color: #aeb9b1;
+
+            font-size: 13px;
+            font-weight: 650;
+
+            padding: 10px 13px;
+
+            border:
+                1px solid transparent;
+
+            border-radius: 12px;
+
+            transition:
+                color .2s ease,
+                background .2s ease,
+                border-color .2s ease,
+                transform .2s ease;
+        }
+
+        nav a:hover {
+            color: #f5faf5;
+
+            background:
+                rgba(255,255,255,.035);
+
+            border-color: var(--line);
+
+            transform:
+                translateY(-1px);
+        }
+
+        nav a.active {
+            color: #071008;
+
+            background:
+                var(--green);
+
+            border-color:
+                var(--green);
+
+            box-shadow:
+                0 10px 28px rgba(72,223,98,.12);
+        }
+
+        /* =========================
+           APP / VIEWS
+        ========================= */
+
+        .app {
+            position: relative;
+            z-index: 1;
+
+            min-height:
+                calc(100vh - 72px);
+        }
+
+        .view {
+            min-height:
+                calc(100vh - 72px);
+
+            padding:
+                120px 20px 80px;
+
+            animation:
+                viewIn .38s ease both;
+        }
+
+        .view-home {
+            display: grid;
+            place-items: center;
+        }
+
+        .view[hidden] {
+            display: none !important;
+        }
+
+        @keyframes viewIn {
+            from {
+                opacity: 0;
+                transform:
+                    translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* =========================
+           HOME
+        ========================= */
+
+        .hero-inner {
+            width:
+                min(960px, 100%);
+
+            text-align: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding:
+                7px 12px;
+
+            border:
+                1px solid var(--green-line);
+
+            border-radius:
+                999px;
+
+            background:
+                rgba(72,223,98,.035);
+
+            color:
+                #9fe9ab;
+
+            font-size:
+                11px;
+
+            font-weight:
+                750;
+
+            letter-spacing:
+                .11em;
+
+            text-transform:
+                uppercase;
+
+            animation:
+                reveal .7s ease both;
+        }
+
+        .eyebrow::before {
+            content: "";
+
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background:
+                var(--green);
+
+            box-shadow:
+                0 0 13px rgba(72,223,98,.75);
+        }
+
+        h1 {
+            margin-top: 24px;
+
+            font-size:
+                clamp(48px, 8vw, 88px);
+
+            line-height: .94;
+
+            letter-spacing:
+                -.065em;
+
+            font-weight:
+                850;
+
+            animation:
+                reveal .75s .06s ease both;
+        }
+
+        h1 span {
+            display: block;
+
+            color:
+                var(--green);
+
+            text-shadow:
+                0 0 45px rgba(72,223,98,.12);
+        }
+
+        .description {
+            max-width:
+                620px;
+
+            margin:
+                24px auto 0;
+
+            color:
+                var(--muted);
+
+            font-size:
+                16px;
+
+            line-height:
+                1.75;
+
+            animation:
+                reveal .75s .12s ease both;
+        }
+
+        .countdown {
+            width:
+                min(650px,100%);
+
+            margin:
+                34px auto 0;
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(4,1fr);
+
+            gap:
+                10px;
+
+            animation:
+                reveal .75s .18s ease both;
+        }
+
+        .time-box {
+            position: relative;
+
+            overflow: hidden;
+
+            padding:
+                20px 12px;
+
+            border:
+                1px solid var(--line);
+
+            border-radius:
+                17px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(255,255,255,.035),
+                    rgba(255,255,255,.015)
+                );
+
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.025),
+                0 15px 45px rgba(0,0,0,.14);
+
+            transition:
+                transform .25s ease,
+                border-color .25s ease,
+                background .25s ease;
+        }
+
+        .time-box:hover {
+            transform:
+                translateY(-4px);
+
+            border-color:
+                var(--green-line);
+
+            background:
+                linear-gradient(
+                    180deg,
+                    rgba(72,223,98,.045),
+                    rgba(255,255,255,.015)
+                );
+        }
+
+        .time-box strong {
+            display: block;
+
+            font-size:
+                clamp(28px,4vw,42px);
+
+            line-height: 1;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                -.045em;
+        }
+
+        .time-box span {
+            display: block;
+
+            margin-top:
+                9px;
+
+            color:
+                var(--muted-2);
+
+            font-size:
+                10px;
+
+            font-weight:
+                750;
+
+            text-transform:
+                uppercase;
+
+            letter-spacing:
+                .13em;
+        }
+
+        .date {
+            margin-top:
+                16px;
+
+            color:
+                #657269;
+
+            font-size:
+                12px;
+        }
+
+        .hero-note {
+            max-width:
+                700px;
+
+            margin:
+                30px auto 0;
+
+            padding:
+                15px 18px;
+
+            border:
+                1px solid rgba(72,223,98,.11);
+
+            border-radius:
+                15px;
+
+            background:
+                rgba(72,223,98,.022);
+
+            color:
+                #859289;
+
+            font-size:
+                12px;
+
+            line-height:
+                1.65;
+
+            text-align:
+                left;
+        }
+
+        .hero-note strong,
+        .hero-note b {
+            color:
+                #cdd8cf;
+        }
+
+        /* =========================
+           INNER PAGES
+        ========================= */
+
+        .section-wrap {
+            width:
+                min(1050px,100%);
+
+            margin:
+                0 auto;
+        }
+
+        .page-top {
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            gap:
+                20px;
+
+            color:
+                #657169;
+
+            font-size:
+                12px;
+
+            padding-bottom:
+                26px;
+
+            border-bottom:
+                1px solid var(--line);
+        }
+
+        .back {
+            color:
+                #aab6ad;
+
+            text-decoration:
+                none;
+
+            transition:
+                .2s;
+        }
+
+        .back:hover {
+            color:
+                var(--green);
+
+            transform:
+                translateX(-2px);
+        }
+
+        .page-title {
+            padding:
+                38px 0 34px;
+        }
+
+        .section-kicker {
+            color:
+                #8fe09a;
+
+            font-size:
+                11px;
+
+            font-weight:
+                750;
+
+            letter-spacing:
+                .12em;
+
+            text-transform:
+                uppercase;
+        }
+
+        .page-title h2 {
+            margin-top:
+                8px;
+
+            font-size:
+                clamp(38px,6vw,64px);
+
+            letter-spacing:
+                -.055em;
+
+            line-height:
+                1;
+        }
+
+        .page-title p {
+            max-width:
+                650px;
+
+            margin-top:
+                15px;
+
+            color:
+                var(--muted);
+
+            line-height:
+                1.7;
+        }
+
+        /* =========================
+           RULES
+        ========================= */
+
+        .rules-section {
+            padding:
+                28px 0;
+
+            border-bottom:
+                1px solid var(--line);
+        }
+
+        .rules-section:last-child {
+            border-bottom:
+                0;
+        }
+
+        .rules-section h3 {
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                9px;
+
+            font-size:
+                15px;
+        }
+
+        .rules-section h3::before {
+            content:
+                "";
+
+            width:
+                6px;
+
+            height:
+                6px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--green);
+
+            box-shadow:
+                0 0 13px rgba(72,223,98,.45);
+        }
+
+        .rules-section ol {
+            margin-top:
+                14px;
+
+            padding-left:
+                23px;
+        }
+
+        .rules-section li {
+            padding-left:
+                4px;
+
+            margin-bottom:
+                9px;
+
+            color:
+                #a8b3aa;
+
+            font-size:
+                13px;
+
+            line-height:
+                1.62;
+        }
+
+        .rules-section li::marker {
+            color:
+                #647169;
+
+            font-weight:
+                700;
+        }
+
+        .rules-section a {
+            color:
+                #8ee99a;
+
+            text-underline-offset:
+                3px;
+
+            transition:
+                color .2s ease;
+        }
+
+        .rules-section a:hover {
+            color:
+                #c0ffc8;
+        }
+
+        .penalties {
+            margin-top:
+                18px;
+
+            padding:
+                15px 17px;
+
+            border:
+                1px solid rgba(72,223,98,.1);
+
+            border-radius:
+                14px;
+
+            background:
+                rgba(72,223,98,.022);
+        }
+
+        .penalties strong,
+        .penalties b {
+            color:
+                #dce7de;
+
+            font-size:
+                12px;
+        }
+
+        .penalties p {
+            margin-top:
+                7px;
+
+            color:
+                #7f8b82;
+
+            font-size:
+                12px;
+
+            line-height:
+                1.6;
+        }
+
+        /* =========================
+           MODS
+        ========================= */
+
+        .mods-grid {
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(2,minmax(0,1fr));
+
+            gap:
+                12px;
+        }
+
+        .mod-card {
+            display:
+                flex;
+
+            gap:
+                14px;
+
+            padding:
+                19px;
+
+            border:
+                1px solid var(--line);
+
+            border-radius:
+                17px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,.035),
+                    rgba(255,255,255,.012)
+                );
+
+            transition:
+                transform .25s ease,
+                border-color .25s ease,
+                background .25s ease,
+                box-shadow .25s ease;
+
+            animation:
+                cardIn .5s ease both;
+        }
+
+        .mod-card:hover {
+            transform:
+                translateY(-4px);
+
+            border-color:
+                var(--green-line);
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(72,223,98,.055),
+                    rgba(255,255,255,.012)
+                );
+
+            box-shadow:
+                0 18px 50px rgba(0,0,0,.18);
+        }
+
+        .mod-card i {
+            width:
+                38px;
+
+            height:
+                38px;
+
+            flex:
+                0 0 38px;
+
+            display:
+                grid;
+
+            place-items:
+                center;
+
+            border:
+                1px solid rgba(72,223,98,.14);
+
+            border-radius:
+                12px;
+
+            background:
+                rgba(72,223,98,.05);
+
+            color:
+                #91ed9d;
+
+            font-style:
+                normal;
+
+            font-size:
+                15px;
+
+            font-weight:
+                800;
+        }
+
+        .mod-card h4 {
+            font-size:
+                14px;
+
+            letter-spacing:
+                -.01em;
+        }
+
+        .mod-card p {
+            margin-top:
+                6px;
+
+            color:
+                #7f8b82;
+
+            font-size:
+                12px;
+
+            line-height:
+                1.6;
+        }
+
+        .mode-list {
+            display:
+                flex;
+
+            flex-wrap:
+                wrap;
+
+            gap:
+                6px;
+
+            margin-top:
+                10px;
+        }
+
+        .mode-list span {
+            padding:
+                5px 8px;
+
+            border-radius:
+                7px;
+
+            background:
+                rgba(255,255,255,.035);
+
+            color:
+                #8e9b92;
+
+            font-size:
+                10px;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform:
+                    translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform:
+                    none;
+            }
+        }
+
+        .mods-grid .mod-card:nth-child(2n) {
+            animation-delay:
+                .04s;
+        }
+
+        .mods-grid .mod-card:nth-child(3n) {
+            animation-delay:
+                .08s;
+        }
+
+        .mods-grid .mod-card:nth-child(4n) {
+            animation-delay:
+                .12s;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        .footer {
+            position:
+                relative;
+
+            z-index:
+                2;
+
+            padding:
+                0 20px 30px;
+
+            text-align:
+                center;
+
+            color:
+                #4f5b53;
+
+            font-size:
+                11px;
+        }
+
+        /* =========================
+           ANIMATIONS
+        ========================= */
+
+        @keyframes reveal {
+            from {
+                opacity: 0;
+                transform:
+                    translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform:
+                    none;
+            }
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 760px) {
+            .mods-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+            .page-top {
+                align-items:
+                    flex-start;
+
+                flex-direction:
+                    column;
+            }
+        }
+
+        @media (max-width: 500px) {
+            header {
+                height:
+                    64px;
+            }
+
+            .logo {
+                width:
+                    88px;
+            }
+
+            nav a {
+                padding:
+                    9px 10px;
+
+                font-size:
+                    12px;
+            }
+
+            .view {
+                padding:
+                    100px 14px 60px;
+            }
+
+            .countdown {
+                grid-template-columns:
+                    repeat(2,1fr);
+
+                max-width:
+                    340px;
+            }
+
+            .mod-card {
+                padding:
+                    16px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior:
+                    auto !important;
+
+                animation-duration:
+                    .001ms !important;
+
+                animation-iteration-count:
+                    1 !important;
+
+                transition-duration:
+                    .001ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="ambient" aria-hidden="true">
+        <span class="orb"></span>
+        <span class="orb"></span>
+        <span class="orb"></span>
+        <span class="orb"></span>
+    </div>
+
+    <header>
+
+        <a
+            href="#"
+            aria-label="LazeMC.pl"
+            data-route
+        >
+            <img
+                src="/logo.png"
+                alt="LazeMC.pl"
+                class="logo"
+            >
+        </a>
+
+        <nav>
+
+            <a
+                href="#regulamin"
+                data-route
+                id="rulesNav"
+            >
+                Regulamin
+            </a>
+
+            <a
+                href="https://dc.gg/lazemc.pl"
+                target="_blank"
+                rel="noopener"
+                class="active"
+            >
+                Discord
+            </a>
+
+        </nav>
+
+    </header>
+
+    <div class="app" id="app">
+
+        <!-- =========================
+             HOME
+        ========================= -->
+
+        <main
+            class="view view-home"
+            data-view="home"
+        >
+
+            <div class="hero-inner">
+
+                <div class="eyebrow">
+                    LazeMC.pl — Beta
+                </div>
+
+                <h1>
+                    Start serwera
+                    <span>już niedługo</span>
+                </h1>
+
+                <p class="description">
+                    Pierwsze beta testy LazeMC.pl już niedługo.
+                    Sprawdź serwer, poznaj zasady i pomóż nam
+                    dopracować rozgrywkę przed oficjalnym otwarciem.
+                </p>
+
+                <div class="countdown">
+
+                    <div class="time-box">
+                        <strong id="days">00</strong>
+                        <span>Dni</span>
+                    </div>
+
+                    <div class="time-box">
+                        <strong id="hours">00</strong>
+                        <span>Godzin</span>
+                    </div>
+
+                    <div class="time-box">
+                        <strong id="minutes">00</strong>
+                        <span>Minut</span>
+                    </div>
+
+                    <div class="time-box">
+                        <strong id="seconds">00</strong>
+                        <span>Sekund</span>
+                    </div>
+
+                </div>
+
+                <div class="date">
+                    Beta testy — start 7 października 2026
+                </div>
+
+                <div class="hero-note">
+                    <strong>Ważne:</strong>
+                    beta może zawierać błędy i niedopracowane elementy.
+                    W trakcie testów możliwe są zmiany rozgrywki
+                    oraz resety postępu i danych.
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <!-- =========================
+             REGULAMIN
+        ========================= -->
+
+        <main
+            class="view view-page"
+            data-view="rules"
+            hidden
+        >
+
+            <div class="section-wrap">
+
+                <div class="page-top">
+
+                    <a
+                        class="back"
+                        href="#"
+                        data-route
+                    >
+                        ← Strona główna
+                    </a>
+
+                    <span>
+                        Regulamin
+                    </span>
+
+                </div>
+
+                <div class="page-title">
+
+                    <div class="section-kicker">
+                        LazeMC.pl
+                    </div>
+
+                    <h2>
+                        Regulamin
+                    </h2>
+
+                    <p>
+                        Zasady obowiązujące na serwerze Minecraft
+                        oraz na naszym Discordzie.
+                    </p>
+
+                </div>
+
+
+                <section class="rules-section">
+
+                    <h3>
+                        Regulamin Minecraft
+                    </h3>
+
+                    <ol>
+
+                        <li>
+                            Każdy gracz ma obowiązek znać i przestrzegać
+                            regulaminu oraz stosować się do poleceń administracji.
+                        </li>
+
+                        <li>
+                            Nieznajomość regulaminu nie zwalnia
+                            z odpowiedzialności ani z nałożonej kary.
+                        </li>
+
+                        <li>
+                            Zabrania się wykorzystywania bugów
+                            i błędów serwera.
+                        </li>
+
+                        <li>
+                            Każdy znaleziony bug należy zgłosić administracji.
+                        </li>
+
+                        <li>
+                            Bezwzględnie zabrania się działania na szkodę
+                            serwera, administracji lub jego społeczności.
+                        </li>
+
+                        <li>
+                            Zabrania się używania cheatów oraz
+                            <a href="#Mody" data-route>
+                                niedozwolonych modyfikacji
+                            </a>.
+                        </li>
+
+                        <li>
+                            Zakazane są między innymi KillAura, Fly, Speed,
+                            Reach, AimAssist, ESP, Nuker oraz inne wspomagacze
+                            dające nieuczciwą przewagę.
+                        </li>
+
+                        <li>
+                            Zakazane jest obrażanie, prowokowanie
+                            i nękanie innych graczy.
+                        </li>
+
+                        <li>
+                            Zabrania się spamowania i floodowania czatu.
+                        </li>
+
+                        <li>
+                            Zakazane są groźby, szantaż
+                            oraz celowe uprzykrzanie gry.
+                        </li>
+
+                        <li>
+                            Zabrania się podszywania pod innych graczy
+                            lub administrację.
+                        </li>
+
+                        <li>
+                            Zabrania się reklamowania innych serwerów
+                            bez zgody administracji.
+                        </li>
+
+                        <li>
+                            Zabrania się wyłudzania przedmiotów,
+                            pieniędzy, kont oraz innych dóbr.
+                        </li>
+
+                        <li>
+                            Zabrania się wykorzystywania bugów lub błędów
+                            serwera do zdobywania przedmiotów, pieniędzy
+                            lub innych korzyści.
+                        </li>
+
+                        <li>
+                            Administracja może usunąć przedmioty lub korzyści
+                            zdobyte w wyniku oszustwa, exploitów lub innych
+                            niedozwolonych działań.
+                        </li>
+
+                    </ol>
+
+                    <div class="penalties">
+
+                        <b>Kary</b>
+
+                        <p>
+                            Ostrzeżenie, Mute, Kick, TempBan,
+                            Ban permanentny, usunięcie nieuczciwie zdobytych
+                            przedmiotów, reset postępu lub innych korzyści
+                            uzyskanych w wyniku złamania regulaminu.
+                        </p>
+
+                        <p>
+                            Administracja może zwiększyć karę
+                            w przypadku recydywy lub celowego działania
+                            na szkodę serwera.
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <section class="rules-section">
+
+                    <h3>
+                        Regulamin Discord
+                    </h3>
+
+                    <ol>
+
+                        <li>
+                            Dołączając na Discorda, akceptujesz regulamin.
+                        </li>
+
+                        <li>
+                            Nieznajomość regulaminu nie zwalnia
+                            z odpowiedzialności ani z nałożonej kary.
+                        </li>
+
+                        <li>
+                            Każdy użytkownik ma obowiązek zachowywać się
+                            z szacunkiem wobec innych i stosować się
+                            do poleceń administracji.
+                        </li>
+
+                        <li>
+                            Bezwzględnie zabrania się działania na szkodę
+                            serwera, administracji lub jego społeczności.
+                        </li>
+
+                        <li>
+                            Zakazuje się obrażania innych użytkowników.
+                        </li>
+
+                        <li>
+                            Zabrania się nękania, prowokowania oraz
+                            celowego wywoływania konfliktów.
+                        </li>
+
+                        <li>
+                            Zakazane są groźby i szantaż.
+                        </li>
+
+                        <li>
+                            Zabrania się spamu oraz floodowania.
+                        </li>
+
+                        <li>
+                            Zabrania się nadmiernego używania wielkich liter,
+                            pingów oraz innych form utrudniania rozmowy.
+                        </li>
+
+                        <li>
+                            Zakazuje się publikowania treści NSFW
+                            lub innych nieodpowiednich materiałów.
+                        </li>
+
+                        <li>
+                            Zabrania się publikowania cudzych danych
+                            osobowych bez odpowiedniej zgody.
+                        </li>
+
+                        <li>
+                            Zabrania się reklamowania innych serwerów Minecraft.
+                        </li>
+
+                        <li>
+                            Zabrania się reklamowania innych serwerów Discord.
+                        </li>
+
+                        <li>
+                            Zakazane jest wysyłanie reklam na prywatne
+                            wiadomości do użytkowników poznanych
+                            na naszym serwerze.
+                        </li>
+
+                        <li>
+                            Zakazane jest obchodzenie zakazu reklamy
+                            poprzez ukryte linki, zdjęcia, nicki
+                            lub inne formy promocji.
+                        </li>
+
+                        <li>
+                            Zabrania się puszczania głośnych lub uciążliwych
+                            dźwięków na kanałach głosowych.
+                        </li>
+
+                        <li>
+                            Zakazuje się celowego przeszkadzania
+                            innym użytkownikom.
+                        </li>
+
+                        <li>
+                            Nick nie może podszywać się pod administrację
+                            lub innego użytkownika.
+                        </li>
+
+                        <li>
+                            Zabrania się celowego utrudniania
+                            pracy administracji.
+                        </li>
+
+                        <li>
+                            Próby obchodzenia bana poprzez alternatywne konta
+                            mogą skutkować kolejną blokadą.
+                        </li>
+
+                    </ol>
+
+                    <div class="penalties">
+
+                        <b>Kary</b>
+
+                        <p>
+                            Ostrzeżenie, Mute, Timeout, Kick,
+                            czasowa blokada oraz permanentny ban.
+                        </p>
+
+                        <p>
+                            W przypadku poważnych przewinień kara może zostać
+                            nałożona bez wcześniejszego ostrzeżenia.
+                        </p>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </main>
+
+
+        <!-- =========================
+             MODY
+        ========================= -->
+
+        <main
+            class="view view-page"
+            data-view="mods"
+            hidden
+        >
+
+            <div class="section-wrap">
+
+                <div class="page-top">
+
+                    <a
+                        class="back"
+                        href="#regulamin"
+                        data-route
+                    >
+                        ← Regulamin
+                    </a>
+
+                    <span>
+                        Zakazane modyfikacje
+                    </span>
+
+                </div>
+
+                <div class="page-title">
+
+                    <div class="section-kicker">
+                        LazeMC.pl
+                    </div>
+
+                    <h2>
+                        Zakazane modyfikacje
+                    </h2>
+
+                    <p>
+                        Lista niedozwolonych modyfikacji i narzędzi.
+                        Lista może zostać rozszerzona przez administrację.
+                    </p>
+
+                </div>
+
+
+                <div class="mods-grid">
+
+                    <article class="mod-card">
+                        <i>↟</i>
+
+                        <div>
+                            <h4>ElytraSwapper</h4>
+
+                            <p>
+                                Automatycznie przełącza elytrę i napierśnik,
+                                ułatwiając szybką zmianę wyposażenia.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>↔</i>
+
+                        <div>
+                            <h4>Inventory Move</h4>
+
+                            <p>
+                                Pozwala poruszać się podczas korzystania
+                                z ekwipunku i innych ekranów.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>◌</i>
+
+                        <div>
+                            <h4>FreeCam</h4>
+
+                            <p>
+                                Pozwala swobodnie poruszać kamerą
+                                poza normalnym widokiem gracza.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>◈</i>
+
+                        <div>
+                            <h4>ChestESP</h4>
+
+                            <p>
+                                Ułatwia wykrywanie skrzynek, spawnerów
+                                i innych obiektów przez ich wizualne oznaczanie.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>✦</i>
+
+                        <div>
+                            <h4>Soup API</h4>
+
+                            <p>
+                                Dodaje dodatkowe informacje i wizualizacje
+                                mogące ułatwiać rozgrywkę PvP.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⌁</i>
+
+                        <div>
+                            <h4>Xaero’s Minimap / VoxelMap</h4>
+
+                            <p>
+                                Mapy pokazujące graczy, struktury lub inne
+                                informacje niedostępne w standardowym interfejsie.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>◉</i>
+
+                        <div>
+                            <h4>Omniscience</h4>
+
+                            <p>
+                                Ujawnia dodatkowe informacje o graczach,
+                                również w sytuacjach, w których nie powinny
+                                być widoczne.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>Aa</i>
+
+                        <div>
+                            <h4>Better Name Visibility</h4>
+
+                            <p>
+                                Zmienia sposób wyświetlania nicków,
+                                umożliwiając ich łatwiejsze śledzenie
+                                przez przeszkody.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⌖</i>
+
+                        <div>
+                            <h4>NameProtect</h4>
+
+                            <p>
+                                Ukrywa lub zmienia nick gracza,
+                                utrudniając identyfikację podczas moderowania.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⌗</i>
+
+                        <div>
+                            <h4>Cut Through</h4>
+
+                            <p>
+                                Pozwala na interakcję z wybranymi hitboxami
+                                mimo przeszkód takich jak trawa.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>➤</i>
+
+                        <div>
+                            <h4>Projectile Trajectory Preview</h4>
+
+                            <p>
+                                Wyświetla przewidywaną trajektorię pocisków
+                                przed ich wystrzeleniem.
+                            </p>
+                        </div>
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⚙</i>
+
+                        <div>
+
+                            <h4>PlayerAutoma</h4>
+
+                            <p>
+                                Automatyzuje wykonywanie wybranych czynności
+                                i ruchów gracza.
+                            </p>
+
+                            <div class="mode-list">
+                                <span>ChestPvP</span>
+                                <span>EarthSMP</span>
+                                <span>BoxPvP Practice</span>
+                                <span>SkyGen</span>
+                                <span>KitPvP</span>
+                            </div>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⛏</i>
+
+                        <div>
+
+                            <h4>Baritone</h4>
+
+                            <p>
+                                Automatyzuje poruszanie się i wykonywanie
+                                wybranych czynności, w tym kopanie bloków.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⊞</i>
+
+                        <div>
+
+                            <h4>Better PvP</h4>
+
+                            <p>
+                                Rozszerza interfejs rozgrywki o dodatkowe
+                                funkcje, w tym elementy minimapy.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>✧</i>
+
+                        <div>
+
+                            <h4>PhantomVisual</h4>
+
+                            <p>
+                                Dodaje dodatkowe wizualizacje i informacje
+                                ułatwiające rozgrywkę.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>▦</i>
+
+                        <div>
+
+                            <h4>Enough Visuals</h4>
+
+                            <p>
+                                Zawiera moduły zapewniające dodatkowe informacje
+                                i funkcje wykraczające poza standardową rozgrywkę.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>↟</i>
+
+                        <div>
+
+                            <h4>Auto Jump Reset</h4>
+
+                            <p>
+                                Automatyzuje wykonanie jump resetu,
+                                skracając reakcję potrzebną do jego wykonania.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⌁</i>
+
+                        <div>
+
+                            <h4>Consumable Optimizer</h4>
+
+                            <p>
+                                Automatyzuje lub optymalizuje używanie
+                                przedmiotów zużywalnych podczas rozgrywki.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>🖱</i>
+
+                        <div>
+
+                            <h4>Mouse Tweaks</h4>
+
+                            <p>
+                                Zmienia i automatyzuje wybrane zachowania
+                                myszy oraz operacje wykonywane w ekwipunku.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>▣</i>
+
+                        <div>
+
+                            <h4>Accurate Block Placement</h4>
+
+                            <p>
+                                Ułatwia i zwiększa precyzję stawiania bloków
+                                poprzez dodatkowe mechanizmy wspomagające.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>◇</i>
+
+                        <div>
+
+                            <h4>Anti Ghost</h4>
+
+                            <p>
+                                Dodaje funkcje pomagające wykrywać lub korygować
+                                problemy z niewidocznymi obiektami i desynchronizacją.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>UI</i>
+
+                        <div>
+
+                            <h4>ImproperUI</h4>
+
+                            <p>
+                                Zmienia interfejs i sposób prezentowania informacji
+                                w sposób dający dodatkowe możliwości podczas gry.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>☒</i>
+
+                        <div>
+
+                            <h4>Wszelkie hack / cheat clienty</h4>
+
+                            <p>
+                                Zakazane są wszelkie klienty zawierające cheaty
+                                lub funkcje zapewniające nieuczciwą przewagę.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>⌘</i>
+
+                        <div>
+
+                            <h4>Wszelkie macra</h4>
+
+                            <p>
+                                Zakazane są makra i narzędzia automatyzujące
+                                działania, np. Auto Clickery, Tweakaroo
+                                czy Item Scroller.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>≋</i>
+
+                        <div>
+
+                            <h4>Clumsy</h4>
+
+                            <p>
+                                Narzędzie pozwalające manipulować połączeniem
+                                sieciowym w celu uzyskania przewagi
+                                podczas rozgrywki.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+
+                    <article class="mod-card">
+                        <i>◎</i>
+
+                        <div>
+
+                            <h4>Optimal Aim</h4>
+
+                            <p>
+                                Wspomaga celowanie i poprawia precyzję
+                                wykonywania działań wymagających celowania.
+                            </p>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <footer class="footer">
+        LazeMC.pl • Do zobaczenia na serwerze
+    </footer>
+
+
+    <script>
+
+        /* =========================
+           COUNTDOWN
+        ========================= */
+
+        const targetDate =
+            new Date("2026-10-07T00:00:00").getTime();
+
+        const pad =
+            n => String(n).padStart(2, "0");
+
+        function updateCountdown() {
+
+            const distance =
+                targetDate - Date.now();
+
+            const values =
+                distance <= 0
+
+                ? [0,0,0,0]
+
+                : [
+                    Math.floor(
+                        distance / 86400000
+                    ),
+
+                    Math.floor(
+                        distance % 86400000 /
+                        3600000
+                    ),
+
+                    Math.floor(
+                        distance % 3600000 /
+                        60000
+                    ),
+
+                    Math.floor(
+                        distance % 60000 /
+                        1000
+                    )
+                ];
+
+            [
+                "days",
+                "hours",
+                "minutes",
+                "seconds"
+            ].forEach(
+                (id, i) => {
+
+                    document.getElementById(id)
+                        .textContent =
+                        pad(values[i]);
+
+                }
+            );
+        }
+
+        updateCountdown();
+
+        setInterval(
+            updateCountdown,
+            1000
+        );
+
+
+        /* =========================
+           SPA ROUTER
+        ========================= */
+
+        const views = {
+
+            home:
+                document.querySelector(
+                    '[data-view="home"]'
+                ),
+
+            rules:
+                document.querySelector(
+                    '[data-view="rules"]'
+                ),
+
+            mods:
+                document.querySelector(
+                    '[data-view="mods"]'
+                )
+
+        };
+
+
+        function route() {
+
+            const hash =
+                location.hash.toLowerCase();
+
+
+            let key =
+                "home";
+
+
+            if (
+                hash === "#regulamin"
+            ) {
+
+                key =
+                    "rules";
+
+            }
+
+            else if (
+                hash === "#mody"
+            ) {
+
+                key =
+                    "mods";
+
+            }
+
+
+            Object.entries(
+                views
+            ).forEach(
+                ([name, element]) => {
+
+                    element.hidden =
+                        name !== key;
+
+                }
+            );
+
+
+            document
+                .getElementById("rulesNav")
+                .classList
+                .toggle(
+                    "active",
+                    key === "rules" ||
+                    key === "mods"
+                );
+
+
+            window.scrollTo({
+                top: 0,
+                behavior: "instant"
+            });
+
+
+            if (
+                key === "home"
+            ) {
+
+                document.title =
+                    "LazeMC.pl — Beta testy już niedługo";
+
+            }
+
+            else if (
+                key === "rules"
+            ) {
+
+                document.title =
+                    "LazeMC.pl — Regulamin";
+
+            }
+
+            else {
+
+                document.title =
+                    "LazeMC.pl — Zakazane modyfikacje";
+
+            }
+
+        }
+
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const link =
+                    event.target.closest(
+                        "[data-route]"
+                    );
+
+                if (!link) {
+                    return;
+                }
+
+
+                const href =
+                    link.getAttribute(
+                        "href"
+                    );
+
+
+                if (
+                    href === "#" ||
+                    href === "#regulamin" ||
+                    href === "#Mody"
+                ) {
+
+                    event.preventDefault();
+
+
+                    history.pushState(
+                        null,
+                        "",
+                        href === "#"
+                            ? "#"
+                            : href
+                    );
+
+
+                    route();
+
+                }
+
+            }
+        );
+
+
+        window.addEventListener(
+            "hashchange",
+            route
+        );
+
+
+        window.addEventListener(
+            "popstate",
+            route
+        );
+
+
+        route();
+
+    </script>
+
+</body>
+</html>
